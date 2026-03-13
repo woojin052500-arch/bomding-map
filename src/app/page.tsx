@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import Script from 'next/script'; // Next.js 스크립트 컴포넌트 추가
 import { mockShops } from '@/data/shops';
 import { Shop, Region } from '@/types';
 import { haversineDistance } from '@/lib/haversine';
@@ -99,6 +100,19 @@ export default function HomePage() {
     return counts;
   }, []);
 
+  // 애드핏 광고 컴포넌트
+  const AdFit = () => (
+    <div className="flex justify-center py-4 bg-gray-50 border-y border-gray-100">
+      <ins
+        className="kakao_ad_area"
+        style={{ display: 'none' }}
+        data-ad-unit="DAN-5W1bo7aYRH8d8xS4"
+        data-ad-width="300"
+        data-ad-height="250"
+      ></ins>
+    </div>
+  );
+
   const Sidebar = (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -188,7 +202,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Shop list */}
+      {/* Shop list & AdFit */}
       <div className="flex-1 overflow-y-auto px-3 py-2">
         {filteredShops.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
@@ -196,15 +210,19 @@ export default function HomePage() {
             <p className="text-sm">검색 결과가 없어요</p>
           </div>
         ) : (
-          filteredShops.map((shop, i) => (
-            <ShopCard
-              key={shop.id}
-              shop={shop}
-              isSelected={selectedShop?.id === shop.id}
-              onClick={() => setSelectedShop(shop)}
-              rank={userLocation ? i : undefined}
-            />
-          ))
+          <>
+            {filteredShops.map((shop, i) => (
+              <ShopCard
+                key={shop.id}
+                shop={shop}
+                isSelected={selectedShop?.id === shop.id}
+                onClick={() => setSelectedShop(shop)}
+                rank={userLocation ? i : undefined}
+              />
+            ))}
+            {/* 리스트 하단에 광고 배치 */}
+            <AdFit />
+          </>
         )}
       </div>
 
@@ -223,6 +241,13 @@ export default function HomePage() {
 
   return (
     <main className="w-screen h-screen overflow-hidden flex flex-col">
+      {/* 카카오 애드핏 스크립트 로드 */}
+      <Script
+        src="//t1.daumcdn.net/kas/static/ba.min.js"
+        async
+        strategy="afterInteractive"
+      />
+
       {/* Desktop: Sidebar + Map */}
       {!isMobile ? (
         <div className="flex h-full">
@@ -277,7 +302,7 @@ export default function HomePage() {
               )}
             </div>
 
-            {/* Region filter pills (horizontal scroll) */}
+            {/* Region filter pills */}
             <div className="flex gap-2 mt-2 overflow-x-auto pb-1 hide-scrollbar">
               {REGIONS.map((r) => (
                 <button
@@ -297,7 +322,7 @@ export default function HomePage() {
 
           {/* Mobile bottom sheet */}
           <div
-            className={`bottom-sheet absolute left-0 right-0 bottom-0 z-20 bg-white rounded-t-3xl shadow-2xl ${
+            className={`bottom-sheet absolute left-0 right-0 bottom-0 z-20 bg-white rounded-t-3xl shadow-2xl transition-transform duration-300 ${
               bottomSheetOpen ? '' : 'translate-y-[calc(100%-80px)]'
             }`}
             style={{ maxHeight: '70vh' }}
@@ -320,7 +345,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* List */}
+            {/* List & AdFit */}
             <div className="overflow-y-auto px-3" style={{ maxHeight: 'calc(70vh - 80px)' }}>
               {filteredShops.slice(0, 50).map((shop, i) => (
                 <ShopCard
@@ -334,6 +359,10 @@ export default function HomePage() {
                   rank={userLocation ? i : undefined}
                 />
               ))}
+              {/* 모바일 리스트 하단 광고 */}
+              <div className="pb-8">
+                <AdFit />
+              </div>
             </div>
           </div>
 
